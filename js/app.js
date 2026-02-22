@@ -2,7 +2,7 @@
  * APP.JS — Core router, auth, API helpers, modal/toast system
  */
 
-const API = '/APP-RRHH%20Schedule/api';
+const API = window.location.hostname === 'localhost' ? '/APP-RRHH%20Schedule/api' : '/api';
 
 // ─── Global State ───
 const App = {

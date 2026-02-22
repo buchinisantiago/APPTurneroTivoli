@@ -93,9 +93,13 @@ if ($view === 'hours' || $view === 'all') {
         $dateTo = date('Y-m-t');
     }
 
+    $timeDiff = isPostgres()
+        ? 'EXTRACT(EPOCH FROM (s.end_time - s.start_time)) / 60'
+        : 'TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time)';
+
     $stmt = $db->prepare("
         SELECT e.id, e.name, e.max_weekly_hours,
-               SUM(TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time)) / 60.0 as total_hours,
+               SUM($timeDiff) / 60.0 as total_hours,
                COUNT(s.id) as shift_count
         FROM employees e
         LEFT JOIN shifts s ON s.employee_id = e.id
@@ -130,16 +134,20 @@ if ($view === 'alerts' || $view === 'all') {
     $monday = date('Y-m-d', strtotime('monday this week'));
     $sunday = date('Y-m-d', strtotime('sunday this week'));
 
+    $timeDiff2 = isPostgres()
+        ? 'EXTRACT(EPOCH FROM (s.end_time - s.start_time)) / 60'
+        : 'TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time)';
+
     $stmt = $db->prepare("
         SELECT e.id, e.name, e.max_weekly_hours,
-               SUM(TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time)) / 60.0 as weekly_hours
+               SUM($timeDiff2) / 60.0 as weekly_hours
         FROM employees e
         JOIN shifts s ON s.employee_id = e.id
             AND s.shift_date BETWEEN ? AND ?
             AND s.status = 'scheduled'
         WHERE e.active = 1
         GROUP BY e.id, e.name, e.max_weekly_hours
-        HAVING weekly_hours > e.max_weekly_hours
+        HAVING SUM($timeDiff2) / 60.0 > e.max_weekly_hours
     ");
     $stmt->execute([$monday, $sunday]);
     $overLimit = $stmt->fetchAll();

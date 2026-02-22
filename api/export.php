@@ -29,18 +29,17 @@ $params1 = [$dateFrom, $dateTo];
 if ($shopId)
     $params1[] = $shopId;
 
+$minutesExpr = isPostgres()
+    ? "EXTRACT(EPOCH FROM ((s.shift_date || ' ' || s.end_time)::TIMESTAMP - (s.shift_date || ' ' || s.start_time)::TIMESTAMP)) / 60"
+    : "TIMESTAMPDIFF(MINUTE, CONCAT(s.shift_date, ' ', s.start_time), CONCAT(s.shift_date, ' ', s.end_time))";
+
 $sql = "
     SELECT 
         e.id AS employee_id,
         e.name AS employee_name,
         e.role,
         COUNT(s.id) AS total_shifts,
-        COALESCE(SUM(
-            TIMESTAMPDIFF(MINUTE, 
-                CONCAT(s.shift_date, ' ', s.start_time), 
-                CONCAT(s.shift_date, ' ', s.end_time)
-            )
-        ), 0) AS total_minutes,
+        COALESCE(SUM($minutesExpr), 0) AS total_minutes,
         MIN(s.shift_date) AS first_shift,
         MAX(s.shift_date) AS last_shift
     FROM employees e
@@ -75,12 +74,7 @@ $sqlShops = "
         e.id AS employee_id,
         sh.name AS shop_name,
         COUNT(s.id) AS shifts,
-        COALESCE(SUM(
-            TIMESTAMPDIFF(MINUTE, 
-                CONCAT(s.shift_date, ' ', s.start_time), 
-                CONCAT(s.shift_date, ' ', s.end_time)
-            )
-        ), 0) AS minutes
+        COALESCE(SUM($minutesExpr), 0) AS minutes
     FROM employees e
     JOIN shifts s ON s.employee_id = e.id 
         AND s.shift_date >= ? 
