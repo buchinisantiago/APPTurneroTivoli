@@ -160,20 +160,18 @@ INSERT INTO shops (name, color) VALUES
 
 -- Manager account (password: 1234)
 INSERT INTO users (username, email, password_hash, role) VALUES
-  ('manager', 'buchinisantiago@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'manager');
+  ('manager', 'buchinisantiago@gmail.com', '$2y$10$zemeQSol2FVmR7NCvmcWxufuzIqX2uyjxEPFbSeo98m6Hvr2u0BSO', 'manager');
 
--- Staff accounts (password = username for each)
--- NOTE: You should run setup.php once on Render to generate proper bcrypt hashes,
--- or replace these with real bcrypt hashes for each staff password.
--- The hash below is a placeholder for 'password'
+-- Staff accounts (password = username for each, e.g. staff1/staff1)
 INSERT INTO users (username, password_hash, role) VALUES
-  ('staff1',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff2',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff3',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff4',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff5',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff6',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff7',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff8',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff9',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff'),
-  ('staff10', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'staff');
+  ('staff1',  '$2y$10$kv.whXBoStEaPhlbYebPgeaO42zQvUJmjjOpYFbimKZowEndbW6n2', 'staff'),
+  ('staff2',  '$2y$10$/ee0i3uXpBWNw693X9LjqeEk0uMfCgAcIIJAq06SvBhoWYswcFdMi', 'staff'),
+  ('staff3',  '$2y$10$TaQwrgFyAF1Pm0S6Y/VJ7eY1MpglMH5qN4bQolN9t3Z.pl8dZ5Bey', 'staff'),
+  ('staff4',  '$2y$10$mDZOYMNbpaaVj/.jD2429.4JsdpeLtxAxm7MvS3NJcY6wwWsudyEK', 'staff'),
+  ('staff5',  '$2y$10$SKiWJVYnwWVLtsdnTQqr7.wFtthHYc.Vh0YUHFCOc15MpqiV349v.', 'staff'),
+  ('staff6',  '$2y$10$NrT78yUI9cIN2gAibr1twu1XOc.EYPvmd87gYeIkfMje1BqzXap0G', 'staff'),
+  ('staff7',  '$2y$10$JOWZAuUAxLwH8i2jVCl98uVewB3MjCyFAdNr0EROSpBof7iEGcooS', 'staff'),
+  ('staff8',  '$2y$10$BoM4ulnTJOTY1ThJAUGhKuRpYV80Ng17B5PmcckmnRUuDS7KjwxDe', 'staff'),
+  ('staff9',  '$2y$10$Q4VJAoNQ54tVf5NHt6LYbOWE6e3UprGR2V4rbwCNndEUFXiGdQBT2', 'staff'),
+  ('staff10', '$2y$10$m/9/HZjqY1kwXVKSoVn7xuF3xF7i43Zjc5QLtXVZoy0OS0t.wsLkC', 'staff');
+
