@@ -52,6 +52,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_employees_updated_at ON employees;
 CREATE TRIGGER trg_employees_updated_at
     BEFORE UPDATE ON employees
     FOR EACH ROW
@@ -91,6 +92,7 @@ CREATE TABLE IF NOT EXISTS shifts (
   FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE
 );
 
+DROP TRIGGER IF EXISTS trg_shifts_updated_at ON shifts;
 CREATE TRIGGER trg_shifts_updated_at
     BEFORE UPDATE ON shifts
     FOR EACH ROW
@@ -122,6 +124,7 @@ CREATE TABLE IF NOT EXISTS swap_requests (
   FOREIGN KEY (claimer_id) REFERENCES employees(id) ON DELETE SET NULL
 );
 
+DROP TRIGGER IF EXISTS trg_swap_requests_updated_at ON swap_requests;
 CREATE TRIGGER trg_swap_requests_updated_at
     BEFORE UPDATE ON swap_requests
     FOR EACH ROW
