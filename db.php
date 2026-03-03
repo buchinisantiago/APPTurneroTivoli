@@ -4,8 +4,10 @@
  * Supports both MySQL (local/XAMPP) and PostgreSQL (Render/Supabase)
  */
 
-// Detect environment
-$database_url = getenv('DATABASE_URL');
+// Detect environment — try multiple sources for env vars
+$database_url = getenv('DATABASE_URL')
+    ?: ($_ENV['DATABASE_URL'] ?? '')
+    ?: ($_SERVER['DATABASE_URL'] ?? '');
 
 if ($database_url) {
     // PRODUCTION (Render → Supabase PostgreSQL)
