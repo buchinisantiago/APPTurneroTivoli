@@ -12,8 +12,8 @@ if ($database_url) {
     $dbopts = parse_url($database_url);
     $host = $dbopts["host"];
     $port = $dbopts["port"];
-    $user = $dbopts["user"];
-    $pass = $dbopts["pass"];
+    $user = isset($dbopts["user"]) ? urldecode($dbopts["user"]) : '';
+    $pass = isset($dbopts["pass"]) ? urldecode($dbopts["pass"]) : '';
     $dbname = ltrim($dbopts["path"], '/');
 
     define('DB_DSN', "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require");

@@ -170,8 +170,9 @@ switch ($method) {
         try {
             $stmt = $db->prepare("INSERT INTO shifts (employee_id, shop_id, shift_date, start_time, end_time, notes) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->execute([$employeeId, $shopId, $date, $startTime, $endTime, $notes]);
-            error_log("Shift created successfully. ID: " . $db->lastInsertId());
-            jsonResponse(['success' => true, 'id' => $db->lastInsertId(), 'message' => 'Shift created'], 201);
+            $shiftId = isPostgres() ? $db->lastInsertId('shifts_id_seq') : $db->lastInsertId();
+            error_log("Shift created successfully. ID: " . $shiftId);
+            jsonResponse(['success' => true, 'id' => $shiftId, 'message' => 'Shift created'], 201);
         } catch (PDOException $e) {
             error_log("Database error in POST shift: " . $e->getMessage());
             jsonResponse(['error' => 'Database error: ' . $e->getMessage()], 500);

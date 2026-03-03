@@ -58,7 +58,7 @@ switch ($method) {
         try {
             $stmt = $db->prepare("INSERT INTO employees (name, phone, role, max_weekly_hours) VALUES (?, ?, ?, ?)");
             $stmt->execute([$name, $phone, $role, $maxHours]);
-            $empId = $db->lastInsertId();
+            $empId = isPostgres() ? $db->lastInsertId('employees_id_seq') : $db->lastInsertId();
 
             // Insert availability slots
             if (!empty($availability)) {

@@ -94,7 +94,8 @@ switch ($method) {
         $stmt = $db->prepare("INSERT INTO swap_requests (shift_id, requester_id, message) VALUES (?, ?, ?)");
         $stmt->execute([$shiftId, $requesterId, $message]);
 
-        jsonResponse(['success' => true, 'id' => $db->lastInsertId(), 'message' => 'Shift released — waiting for someone to claim it'], 201);
+        $requestId = isPostgres() ? $db->lastInsertId('swap_requests_id_seq') : $db->lastInsertId();
+        jsonResponse(['success' => true, 'id' => $requestId, 'message' => 'Shift released — waiting for someone to claim it'], 201);
         break;
 
     // ─── UPDATE RELEASE REQUEST (claim / approve / reject / cancel) ───

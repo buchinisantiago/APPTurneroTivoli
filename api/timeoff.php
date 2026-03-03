@@ -71,7 +71,8 @@ switch ($method) {
         $stmt = $db->prepare("INSERT INTO time_off (employee_id, date_from, date_to, type, reason) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$employeeId, $dateFrom, $dateTo, $type, $reason]);
 
-        jsonResponse(['success' => true, 'id' => $db->lastInsertId(), 'message' => 'Time off request submitted'], 201);
+        $requestId = isPostgres() ? $db->lastInsertId('time_off_id_seq') : $db->lastInsertId();
+        jsonResponse(['success' => true, 'id' => $requestId, 'message' => 'Time off request submitted'], 201);
         break;
 
     // ─── UPDATE (approve/reject/cancel) ───

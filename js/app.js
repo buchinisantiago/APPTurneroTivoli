@@ -56,12 +56,17 @@ function showApp() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('topbar-user').textContent = App.user.username;
+
+    // Toggle manager-only links
+    document.querySelectorAll('.manager-only').forEach(el => {
+        el.classList.toggle('hidden', App.user.role !== 'manager');
+    });
+
     loadShops().then(() => {
         navigateTo(App.currentPage);
         checkPendingTimeOff();
     });
 }
-
 
 async function loadShops() {
     try {
@@ -124,6 +129,10 @@ function navigateTo(page) {
         case 'bidding': renderBidding(content); break;
         case 'swaps': renderSwaps(content); break;
         case 'templates': renderTemplates(content); break;
+        case 'users':
+            if (isManager()) renderUsers(content);
+            else navigateTo('dashboard');
+            break;
     }
 }
 
