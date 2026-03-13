@@ -65,6 +65,10 @@ function showApp() {
     loadShops().then(() => {
         navigateTo(App.currentPage);
         checkPendingTimeOff();
+
+        if (typeof checkStockAlerts === 'function') {
+            checkStockAlerts();
+        }
     });
 }
 
@@ -128,7 +132,11 @@ function navigateTo(page) {
         case 'availability': renderAvailability(content); break;
         case 'bidding': renderBidding(content); break;
         case 'swaps': renderSwaps(content); break;
-        case 'templates': renderTemplates(content); break;
+        case 'stock': renderStock(content); break;
+        case 'templates':
+            if (isManager()) renderTemplates(content);
+            else navigateTo('dashboard');
+            break;
         case 'users':
             if (isManager()) renderUsers(content);
             else navigateTo('dashboard');

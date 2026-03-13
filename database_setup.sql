@@ -128,3 +128,32 @@ INSERT INTO users (username, password_hash, role) VALUES
   ('staff8',  '$2y$10$placeholder', 'staff'),
   ('staff9',  '$2y$10$placeholder', 'staff'),
   ('staff10', '$2y$10$placeholder', 'staff');
+
+-- ============================================
+-- 8. STOCK MANAGEMENT
+-- ============================================
+CREATE TABLE IF NOT EXISTS stock_products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  shop_id INT NOT NULL,
+  name VARCHAR(150) NOT NULL,
+  unit VARCHAR(50) NOT NULL DEFAULT 'units',
+  safety_stock INT NOT NULL DEFAULT 0,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+  INDEX idx_stock_products_shop (shop_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS stock_entries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  stock_product_id INT NOT NULL,
+  quantity INT NOT NULL DEFAULT 0,
+  entry_date DATE NOT NULL,
+  recorded_by INT NOT NULL,
+  notes TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (stock_product_id) REFERENCES stock_products(id) ON DELETE CASCADE,
+  FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE INDEX idx_stock_entry_unique (stock_product_id, entry_date),
+  INDEX idx_stock_entries_date (entry_date)
+) ENGINE=InnoDB;
