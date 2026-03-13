@@ -68,14 +68,37 @@ switch ($method) {
                 }
             }
 
-            // Link to user account if username provided
-            if (!empty($data['link_username'])) {
-                $linkStmt = $db->prepare("UPDATE users SET employee_id = ? WHERE username = ?");
-                $linkStmt->execute([$empId, $data['link_username']]);
+            // Auto-create user account with name.surname format
+            $accents = ['á', 'é', 'í', 'ó', 'ú', 'Á', 'É', 'Í', 'Ó', 'Ú', 'ñ', 'Ñ'];
+            $noAccents = ['a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u', 'n', 'n'];
+            $cleanName = str_replace($accents, $noAccents, mb_strtolower(trim($name), 'UTF-8'));
+            $baseUsername = preg_replace('/[^a-z0-9]+/', '.', $cleanName);
+            $baseUsername = trim($baseUsername, '.');
+            if (empty($baseUsername)) {
+                $baseUsername = 'staff';
             }
 
+            // Ensure unique username
+            $username = $baseUsername;
+            $counter = 1;
+            while (true) {
+                $chk = $db->prepare("SELECT id FROM users WHERE username = ?");
+                $chk->execute([$username]);
+                if (!$chk->fetch()) {
+                    break;
+                }
+                $username = $baseUsername . $counter;
+                $counter++;
+            }
+
+            // Create the linked user
+            $defaultPassword = password_hash('1234', PASSWORD_DEFAULT);
+            $userRole = 'staff';
+            $userStmt = $db->prepare("INSERT INTO users (username, password_hash, role, employee_id) VALUES (?, ?, ?, ?)");
+            $userStmt->execute([$username, $defaultPassword, $userRole, $empId]);
+
             $db->commit();
-            jsonResponse(['success' => true, 'id' => $empId, 'message' => 'Employee created'], 201);
+            jsonResponse(['success' => true, 'id' => $empId, 'message' => "Employee created (User: $username)"], 201);
         } catch (Exception $e) {
             $db->rollBack();
             jsonResponse(['error' => 'Failed to create employee: ' . $e->getMessage()], 500);
