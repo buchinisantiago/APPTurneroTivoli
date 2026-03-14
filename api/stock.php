@@ -28,16 +28,12 @@ switch ($action) {
             $shopId = $_GET['shop_id'] ?? null;
             $showInactive = $_GET['show_inactive'] ?? '0';
 
-            $sql = "SELECT sp.*, s.name AS shop_name, s.color AS shop_color
-                    FROM stock_products sp
-                    JOIN shops s ON s.id = sp.shop_id";
+            $sql = "SELECT sp.*
+                    FROM stock_products sp";
             $params = [];
 
             $conditions = [];
-            if ($shopId) {
-                $conditions[] = "sp.shop_id = ?";
-                $params[] = $shopId;
-            }
+
             if ($showInactive !== '1') {
                 $conditions[] = "sp.active = 1";
             }
@@ -46,7 +42,7 @@ switch ($action) {
                 $sql .= " WHERE " . implode(' AND ', $conditions);
             }
 
-            $sql .= " ORDER BY s.name, sp.name";
+            $sql .= " ORDER BY sp.name";
 
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
@@ -58,17 +54,16 @@ switch ($action) {
                 jsonResponse(['error' => 'Manager access required'], 403);
 
             $data = getRequestBody();
-            $shopId = $data['shop_id'] ?? null;
             $name = trim($data['name'] ?? '');
             $unit = trim($data['unit'] ?? 'units');
             $safetyStock = intval($data['safety_stock'] ?? 0);
 
-            if (!$shopId || !$name) {
-                jsonResponse(['error' => 'shop_id and name are required'], 400);
+            if (!$name) {
+                jsonResponse(['error' => 'Product name is required'], 400);
             }
 
-            $stmt = $db->prepare("INSERT INTO stock_products (shop_id, name, unit, safety_stock) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$shopId, $name, $unit, $safetyStock]);
+            $stmt = $db->prepare("INSERT INTO stock_products (name, unit, safety_stock) VALUES (?, ?, ?)");
+            $stmt->execute([$name, $unit, $safetyStock]);
 
             $id = $db->lastInsertId();
             jsonResponse(['success' => true, 'id' => $id, 'message' => 'Product created']);
@@ -139,7 +134,7 @@ switch ($action) {
             $date = $_GET['date'] ?? date('Y-m-d');
 
             $sql = "SELECT se.*, sp.name AS product_name, sp.unit, sp.safety_stock,
-                           sp.shop_id, u.username AS recorded_by_name
+                           u.username AS recorded_by_name
                     FROM stock_entries se
                     JOIN stock_products sp ON sp.id = se.stock_product_id
                     JOIN users u ON u.id = se.recorded_by
@@ -147,7 +142,7 @@ switch ($action) {
             $params = [$date];
 
             if ($shopId) {
-                $sql .= " AND sp.shop_id = ?";
+                $sql .= " AND se.shop_id = ?";
                 $params[] = $shopId;
             }
 
@@ -178,22 +173,22 @@ switch ($action) {
                         continue;
 
                     if (isPostgres()) {
-                        $sql = "INSERT INTO stock_entries (stock_product_id, quantity, entry_date, recorded_by, notes)
-                                VALUES (?, ?, ?, ?, ?)
-                                ON CONFLICT (stock_product_id, entry_date)
+                        $sql = "INSERT INTO stock_entries (stock_product_id, shop_id, quantity, entry_date, recorded_by, notes)
+                                VALUES (?, ?, ?, ?, ?, ?)
+                                ON CONFLICT (shop_id, stock_product_id, entry_date)
                                 DO UPDATE SET quantity = EXCLUDED.quantity,
                                              recorded_by = EXCLUDED.recorded_by,
                                              notes = EXCLUDED.notes";
                     } else {
-                        $sql = "INSERT INTO stock_entries (stock_product_id, quantity, entry_date, recorded_by, notes)
-                                VALUES (?, ?, ?, ?, ?)
+                        $sql = "INSERT INTO stock_entries (stock_product_id, shop_id, quantity, entry_date, recorded_by, notes)
+                                VALUES (?, ?, ?, ?, ?, ?)
                                 ON DUPLICATE KEY UPDATE quantity = VALUES(quantity),
                                                        recorded_by = VALUES(recorded_by),
                                                        notes = VALUES(notes)";
                     }
 
                     $stmt = $db->prepare($sql);
-                    $stmt->execute([$productId, $quantity, $date, $userId, $notes]);
+                    $stmt->execute([$productId, $shopId ?? 0, $quantity, $date, $userId, $notes]);
                 }
 
                 $db->commit();
@@ -213,21 +208,23 @@ switch ($action) {
             // Get the latest entry for each active product, find those below safety stock
             $today = date('Y-m-d');
 
-            $sql = "SELECT sp.id, sp.name, sp.unit, sp.safety_stock, sp.shop_id,
+            // 3. To get alerts globally, we check if the last entry across ANY shop is below safety. Or should it be per shop? 
+            // The user wants products global, so I'll just check the latest reading across all stores for each product, and alert based on the shop where it was taken 
+            $sql = "SELECT sp.id, sp.name, sp.unit, sp.safety_stock,
                            s.name AS shop_name, s.color AS shop_color,
                            se.quantity AS last_quantity, se.entry_date AS last_date
                     FROM stock_products sp
-                    JOIN shops s ON s.id = sp.shop_id
                     LEFT JOIN stock_entries se ON se.stock_product_id = sp.id
                         AND se.entry_date = (
                             SELECT MAX(se2.entry_date)
                             FROM stock_entries se2
                             WHERE se2.stock_product_id = sp.id
                         )
+                    LEFT JOIN shops s ON s.id = se.shop_id
                     WHERE sp.active = 1
                       AND sp.safety_stock > 0
                       AND (se.quantity IS NULL OR se.quantity < sp.safety_stock)
-                    ORDER BY s.name, sp.name";
+                    ORDER BY sp.name";
 
             $stmt = $db->prepare($sql);
             $stmt->execute();

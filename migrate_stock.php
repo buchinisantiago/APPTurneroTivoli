@@ -44,42 +44,48 @@ try {
         $results[] = "✅ Created table stock_entries (PostgreSQL)";
 
         // Unique constraint to prevent duplicate entries per product per day
-        $db->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_entry_unique ON stock_entries(stock_product_id, entry_date)");
+        // Unique constraint to prevent duplicate entries per product per day per shop
+        $db->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_entry_unique ON stock_entries(shop_id, stock_product_id, entry_date)");
         $results[] = "✅ Created unique index idx_stock_entry_unique";
 
         $db->exec("CREATE INDEX IF NOT EXISTS idx_stock_entries_date ON stock_entries(entry_date)");
         $results[] = "✅ Created index idx_stock_entries_date";
+
+        $db->exec("CREATE INDEX IF NOT EXISTS idx_stock_entries_shop ON stock_entries(shop_id)");
+        $results[] = "✅ Created index idx_stock_entries_shop";
 
     } else {
         // ── MySQL ──
         $db->exec("
             CREATE TABLE IF NOT EXISTS stock_products (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                shop_id INT NOT NULL,
                 name VARCHAR(150) NOT NULL,
                 unit VARCHAR(50) NOT NULL DEFAULT 'units',
                 safety_stock INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
-                INDEX idx_stock_products_shop (shop_id)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB
         ");
         $results[] = "✅ Created table stock_products (MySQL)";
 
+        // Removed idx_stock_products_shop as shop_id is no longer in stock_products
+
         $db->exec("
             CREATE TABLE IF NOT EXISTS stock_entries (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                shop_id INT NOT NULL,
                 stock_product_id INT NOT NULL,
                 quantity INT NOT NULL DEFAULT 0,
                 entry_date DATE NOT NULL,
                 recorded_by INT NOT NULL,
                 notes TEXT DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
                 FOREIGN KEY (stock_product_id) REFERENCES stock_products(id) ON DELETE CASCADE,
                 FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE CASCADE,
-                UNIQUE INDEX idx_stock_entry_unique (stock_product_id, entry_date),
-                INDEX idx_stock_entries_date (entry_date)
+                UNIQUE INDEX idx_stock_entry_unique (shop_id, stock_product_id, entry_date),
+                INDEX idx_stock_entries_date (entry_date),
+                INDEX idx_stock_entries_shop (shop_id)
             ) ENGINE=InnoDB
         ");
         $results[] = "✅ Created table stock_entries (MySQL)";

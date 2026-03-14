@@ -138,29 +138,15 @@ function renderAdminStockView(container, products, entryMap) {
         return;
     }
 
-    // Group by shop
-    const grouped = {};
-    products.forEach(p => {
-        if (!grouped[p.shop_id]) grouped[p.shop_id] = { shop_name: p.shop_name, shop_color: p.shop_color, items: [] };
-        grouped[p.shop_id].items.push(p);
-    });
-
-    let html = '';
-    for (const shopId in grouped) {
-        const group = grouped[shopId];
-        html += `
+    let html = `
         <div class="stock-shop-section">
-            <div class="stock-shop-header">
-                <span class="shop-dot" style="background:${group.shop_color}"></span>
-                <h3>${group.shop_name}</h3>
-            </div>
             <div class="stock-grid">
-                ${group.items.map(p => {
-            const entry = entryMap[p.id];
-            const qty = entry ? entry.quantity : null;
-            const isLow = qty !== null && p.safety_stock > 0 && qty < p.safety_stock;
-            const noEntry = qty === null;
-            return `
+                ${products.map(p => {
+        const entry = entryMap[p.id];
+        const qty = entry ? entry.quantity : null;
+        const isLow = qty !== null && p.safety_stock > 0 && qty < p.safety_stock;
+        const noEntry = qty === null;
+        return `
                     <div class="stock-card ${isLow ? 'stock-card-alert' : ''} ${noEntry ? 'stock-card-noentry' : ''}">
                         <div class="stock-card-header">
                             <span class="stock-product-name">${p.name}</span>
@@ -191,10 +177,9 @@ function renderAdminStockView(container, products, entryMap) {
                         </div>
                         ${isLow ? '<div class="stock-alert-badge"><span class="material-icons-round">warning</span> Low Stock</div>' : ''}
                     </div>`;
-        }).join('')}
+    }).join('')}
             </div>
         </div>`;
-    }
 
     container.innerHTML = html;
 }
@@ -213,28 +198,23 @@ function renderStaffStockView(container, products, entryMap) {
         return;
     }
 
-    // Group by shop
-    const grouped = {};
-    products.forEach(p => {
-        if (!grouped[p.shop_id]) grouped[p.shop_id] = { shop_name: p.shop_name, shop_color: p.shop_color, items: [] };
-        grouped[p.shop_id].items.push(p);
-    });
+    const shopName = stockShopFilter ? App.shops.find(s => s.id == stockShopFilter)?.name : 'All Shops';
+    const shopColor = stockShopFilter ? App.shops.find(s => s.id == stockShopFilter)?.color : '#999';
 
     let html = '<form id="stock-entry-form" onsubmit="submitStockEntries(event)">';
-
-    for (const shopId in grouped) {
-        const group = grouped[shopId];
-        html += `
+    html += `
         <div class="stock-shop-section">
-            <div class="stock-shop-header">
-                <span class="shop-dot" style="background:${group.shop_color}"></span>
-                <h3>${group.shop_name}</h3>
+            <div class="stock-shop-header" style="justify-content:center; margin-bottom:1rem;">
+                 ${stockShopFilter ? `<span class="shop-dot" style="background:${shopColor}"></span>` : ''}
+                 <h3 style="font-size:1.2rem; font-weight:600">${stockShopFilter ? `Recording for ${shopName}` : 'Please select a specific shop above'}</h3>
             </div>
+            
+            ${stockShopFilter ? `
             <div class="stock-entry-list">
-                ${group.items.map(p => {
-            const entry = entryMap[p.id];
-            const prevQty = entry ? entry.quantity : '';
-            return `
+                ${products.map(p => {
+        const entry = entryMap[p.id];
+        const prevQty = entry ? entry.quantity : '';
+        return `
                     <div class="stock-entry-row">
                         <div class="stock-entry-info">
                             <span class="stock-product-name">${p.name}</span>
@@ -253,10 +233,9 @@ function renderStaffStockView(container, products, entryMap) {
                             <span>Min: ${p.safety_stock}</span>
                         </div>
                     </div>`;
-        }).join('')}
-            </div>
+    }).join('')}
+            </div>` : ''}
         </div>`;
-    }
 
     html += `
         <div class="stock-submit-bar">
@@ -275,6 +254,8 @@ function renderStaffStockView(container, products, entryMap) {
 // ═══════════════════════════════════════════
 async function submitStockEntries(e) {
     e.preventDefault();
+    if (!stockShopFilter) return showToast('Please select a specific shop first', 'warning');
+
     const btn = document.getElementById('stock-submit-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="material-icons-round spin">sync</span> Saving...';
@@ -302,7 +283,7 @@ async function submitStockEntries(e) {
     }
 
     try {
-        await api('stock.php?action=entries', 'POST', { entries, date: stockDate });
+        await api(`stock.php?action=entries&shop_id=${stockShopFilter}`, 'POST', { entries, date: stockDate });
         showToast('Stock count saved successfully!', 'success');
         loadStockView();
     } catch (err) {
@@ -370,15 +351,8 @@ async function checkStockAlerts() {
 // ADD PRODUCT MODAL
 // ═══════════════════════════════════════════
 function openAddProductModal() {
-    const shops = App.shops;
     const body = `
         <form id="product-form">
-            <div class="input-group">
-                <label>Shop</label>
-                <select id="product-shop" required style="padding-left:0.75rem">
-                    ${shops.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-                </select>
-            </div>
             <div class="input-group" style="margin-top:12px">
                 <label>Product Name</label>
                 <input type="text" id="product-name" placeholder="e.g. Ron, Whisky, Napkins" required style="padding-left:0.75rem">
@@ -405,7 +379,6 @@ function openAddProductModal() {
 }
 
 async function saveProduct() {
-    const shopId = document.getElementById('product-shop').value;
     const name = document.getElementById('product-name').value.trim();
     const unit = document.getElementById('product-unit').value.trim() || 'units';
     const safetyStock = parseInt(document.getElementById('product-safety').value) || 0;
@@ -413,7 +386,7 @@ async function saveProduct() {
     if (!name) return showToast('Product name is required', 'error');
 
     try {
-        await api('stock.php?action=products', 'POST', { shop_id: shopId, name, unit, safety_stock: safetyStock });
+        await api('stock.php?action=products', 'POST', { name, unit, safety_stock: safetyStock });
         showToast('Product created successfully', 'success');
         closeModal();
         loadStockView();
