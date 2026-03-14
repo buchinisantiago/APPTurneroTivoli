@@ -18,14 +18,14 @@ $response = [];
 
 // ─── WHO'S WORKING TODAY ───
 if ($view === 'today' || $view === 'all') {
-    $stmt = $db->prepare("
+    $sql = "
         SELECT s.*, e.name as employee_name, e.phone as employee_phone,
                sh.name as shop_name, sh.color as shop_color
         FROM shifts s
         JOIN employees e ON e.id = s.employee_id
         JOIN shops sh ON sh.id = s.shop_id
         WHERE s.shift_date = ? AND s.status = 'scheduled'
-    ");
+    ";
     $params = [$today];
     if ($_SESSION['role'] !== 'manager') {
         $sql .= " AND s.employee_id = ?";
@@ -56,14 +56,14 @@ if ($view === 'today' || $view === 'all') {
 // ─── TOMORROW'S COVERAGE ───
 if ($view === 'tomorrow' || $view === 'all') {
     $tomorrow = date('Y-m-d', strtotime('+1 day'));
-    $stmt = $db->prepare("
+    $sql = "
         SELECT s.*, e.name as employee_name, e.phone as employee_phone,
                sh.name as shop_name, sh.color as shop_color
         FROM shifts s
         JOIN employees e ON e.id = s.employee_id
         JOIN shops sh ON sh.id = s.shop_id
         WHERE s.shift_date = ? AND s.status = 'scheduled'
-    ");
+    ";
     $paramsArr = [$tomorrow];
     if ($_SESSION['role'] !== 'manager') {
         $sql .= " AND s.employee_id = ?";

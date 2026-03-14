@@ -192,10 +192,6 @@ function navigateTo(page) {
             if (isManager()) renderTemplates(content);
             else navigateTo('dashboard');
             break;
-        case 'users':
-            if (isManager()) renderUsers(content);
-            else navigateTo('dashboard');
-            break;
     }
 }
 

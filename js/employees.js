@@ -84,7 +84,11 @@ function openEmployeeDetail(id) {
         <div style="font-size:1.1rem; font-weight:600; margin-bottom:1rem;">${emp.max_weekly_hours}h</div>
         <div class="form-label">Availability</div>
         ${availHTML}
-    `, isManager() ? `<button class="btn btn-primary" onclick="closeModal(); openEmployeeModal(${emp.id})">
+    `, isManager() ? `
+    <button class="btn btn-secondary" onclick="resetEmployeePassword(${emp.user_id || 'null'}, '${emp.name}')" ${!emp.user_id ? 'disabled' : ''}>
+        <span class="material-icons-round">lock_reset</span> Reset Password (to 1234)
+    </button>
+    <button class="btn btn-primary" onclick="closeModal(); openEmployeeModal(${emp.id})">
         <span class="material-icons-round">edit</span> Edit
     </button>` : '');
 }
@@ -209,5 +213,19 @@ async function confirmDeleteEmployee(id) {
         navigateTo('staff');
     } catch (err) {
         showToast(err.error || 'Failed to deactivate', 'error');
+    }
+}
+
+async function resetEmployeePassword(userId, empName) {
+    if (!userId) return showToast('This employee has no user account linked', 'error');
+
+    if (!confirm(`Are you sure you want to reset the password for ${empName} to '1234'?`)) return;
+
+    try {
+        await api('users.php?action=reset_password', 'POST', { user_id: userId });
+        showToast('Password reset to 1234 successfully', 'success');
+        closeModal();
+    } catch (err) {
+        showToast(err.error || 'Failed to reset password', 'error');
     }
 }
