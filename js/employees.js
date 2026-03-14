@@ -116,11 +116,10 @@ function openEmployeeModal(id = null) {
             <input type="number" class="input-simple" id="emp-max-hours" value="${emp ? emp.max_weekly_hours : 40}" min="1" max="80" step="0.5">
         </div>
         ${!emp ? `<div class="form-group">
-            <label class="form-label">Link to User Account (optional)</label>
-            <select class="input-simple" id="emp-link-user">
-                <option value="">— None —</option>
-                ${Array.from({ length: 10 }, (_, i) => `<option value="staff${i + 1}">staff${i + 1}</option>`).join('')}
-            </select>
+            <div class="alert-card alert-info" style="margin-top:10px; font-size:0.85rem;">
+                <span class="material-icons-round" style="font-size:16px">info</span>
+                <span>A user account (name.surname) with password '1234' will be automatically created and linked to this employee.</span>
+            </div>
         </div>` : ''}
         <div class="form-group">
             <label class="form-label">Available Days</label>
@@ -171,12 +170,6 @@ async function saveEmployee(id) {
 
     const body = { name, phone, role, max_weekly_hours: maxHours, availability };
 
-    // Link user for new employees
-    if (!id) {
-        const linkEl = document.getElementById('emp-link-user');
-        if (linkEl && linkEl.value) body.link_username = linkEl.value;
-    }
-
     try {
         const btn = document.getElementById('emp-save-btn');
         btn.disabled = true;
@@ -186,8 +179,8 @@ async function saveEmployee(id) {
             await api('employees.php', 'PUT', body);
             showToast('Employee updated');
         } else {
-            await api('employees.php', 'POST', body);
-            showToast('Employee created');
+            const res = await api('employees.php', 'POST', body);
+            showToast(res.message || 'Employee created', 'success');
         }
         closeModal();
         navigateTo('staff');
