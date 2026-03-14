@@ -65,7 +65,7 @@ switch ($action) {
             $stmt = $db->prepare("INSERT INTO stock_products (name, unit, safety_stock) VALUES (?, ?, ?)");
             $stmt->execute([$name, $unit, $safetyStock]);
 
-            $id = $db->lastInsertId();
+            $id = isPostgres() ? $db->lastInsertId('stock_products_id_seq') : $db->lastInsertId();
             jsonResponse(['success' => true, 'id' => $id, 'message' => 'Product created']);
         }
 
