@@ -16,7 +16,7 @@ switch ($method) {
 
         if ($id) {
             // Single employee with availability
-            $stmt = $db->prepare("SELECT * FROM employees WHERE id = ? AND active = 1");
+            $stmt = $db->prepare("SELECT e.*, u.username, u.id as user_id FROM employees e LEFT JOIN users u ON u.employee_id = e.id WHERE e.id = ? AND e.active = 1");
             $stmt->execute([$id]);
             $emp = $stmt->fetch();
             if (!$emp)
@@ -29,7 +29,7 @@ switch ($method) {
             jsonResponse($emp);
         } else {
             // All employees
-            $employees = $db->query("SELECT e.*, u.username FROM employees e LEFT JOIN users u ON u.employee_id = e.id WHERE e.active = 1 ORDER BY e.name")->fetchAll();
+            $employees = $db->query("SELECT e.*, u.username, u.id as user_id FROM employees e LEFT JOIN users u ON u.employee_id = e.id WHERE e.active = 1 ORDER BY e.name")->fetchAll();
 
             // Attach availability
             foreach ($employees as &$emp) {
@@ -167,8 +167,20 @@ switch ($method) {
         if (!$id)
             jsonResponse(['error' => 'ID is required'], 400);
 
-        $db->prepare("UPDATE employees SET active = 0 WHERE id = ?")->execute([$id]);
-        jsonResponse(['success' => true, 'message' => 'Employee deactivated']);
+        $db->beginTransaction();
+        try {
+            // Soft delete employee
+            $db->prepare("UPDATE employees SET active = 0 WHERE id = ?")->execute([$id]);
+
+            // Reassign future shifts to bidding
+            $db->prepare("UPDATE shifts SET employee_id = NULL, is_unassigned = 1 WHERE employee_id = ? AND shift_date >= CURRENT_DATE AND status != 'cancelled'")->execute([$id]);
+
+            $db->commit();
+            jsonResponse(['success' => true, 'message' => 'Employee deactivated and shifts moved to bidding']);
+        } catch (Exception $e) {
+            $db->rollBack();
+            jsonResponse(['error' => 'Failed to deactivate employee: ' . $e->getMessage()], 500);
+        }
         break;
 
     default:
