@@ -10,8 +10,38 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 $db = getDB();
 
-// 1. Enforce Authentication & Manager Role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
+// 1. Enforce Authentication
+if (!isset($_SESSION['user_id'])) {
+    jsonResponse(['error' => 'Not authenticated'], 401);
+}
+
+// 2. Allow any user to change their own password
+if ($action === 'change_password' && $method === 'POST') {
+    $data = getRequestBody();
+    $old = $data['old_password'] ?? '';
+    $new = $data['new_password'] ?? '';
+
+    if (empty($old) || empty($new) || strlen($new) < 4) {
+        jsonResponse(['error' => 'Invalid password format'], 400);
+    }
+
+    $stmt = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user = $stmt->fetch();
+
+    if (!$user || !password_verify($old, $user['password_hash'])) {
+        jsonResponse(['error' => 'Incorrect current password'], 401);
+    }
+
+    $newHash = password_hash($new, PASSWORD_DEFAULT);
+    $update = $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+    $update->execute([$newHash, $_SESSION['user_id']]);
+
+    jsonResponse(['success' => true, 'message' => 'Password updated']);
+}
+
+// 3. Enforce Manager Role for everything else
+if ($_SESSION['role'] !== 'manager') {
     jsonResponse(['error' => 'Unauthorized. Manager access required.'], 403);
 }
 

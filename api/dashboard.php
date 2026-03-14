@@ -25,9 +25,16 @@ if ($view === 'today' || $view === 'all') {
         JOIN employees e ON e.id = s.employee_id
         JOIN shops sh ON sh.id = s.shop_id
         WHERE s.shift_date = ? AND s.status = 'scheduled'
-        ORDER BY sh.name, s.start_time
     ");
-    $stmt->execute([$today]);
+    $params = [$today];
+    if ($_SESSION['role'] !== 'manager') {
+        $sql .= " AND s.employee_id = ?";
+        $params[] = $_SESSION['employee_id'] ?? 0;
+    }
+    $sql .= " ORDER BY sh.name, s.start_time";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
     $todayShifts = $stmt->fetchAll();
 
     // Group by shop
@@ -56,9 +63,16 @@ if ($view === 'tomorrow' || $view === 'all') {
         JOIN employees e ON e.id = s.employee_id
         JOIN shops sh ON sh.id = s.shop_id
         WHERE s.shift_date = ? AND s.status = 'scheduled'
-        ORDER BY sh.name, s.start_time
     ");
-    $stmt->execute([$tomorrow]);
+    $paramsArr = [$tomorrow];
+    if ($_SESSION['role'] !== 'manager') {
+        $sql .= " AND s.employee_id = ?";
+        $paramsArr[] = $_SESSION['employee_id'] ?? 0;
+    }
+    $sql .= " ORDER BY sh.name, s.start_time";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($paramsArr);
     $tomorrowShifts = $stmt->fetchAll();
 
     $byShopTomorrow = [];

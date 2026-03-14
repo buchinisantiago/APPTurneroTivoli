@@ -38,7 +38,7 @@ async function renderDashboard(container) {
 
         // ─── TODAY'S COVERAGE ───
         el.innerHTML += `<div class="dash-section">
-            <div class="dash-section-title">👥 Today's Coverage</div>
+            <div class="dash-section-title">${isManager() ? "👥 Today's Coverage" : "👤 My Shift Today"}</div>
             <div id="dash-today"></div>
         </div>`;
 
@@ -67,18 +67,27 @@ async function renderDashboard(container) {
                     </div>`;
             });
         } else {
-            // Show all shops even if no shifts
-            App.shops.forEach(shop => {
+            if (isManager()) {
+                // Show all shops even if no shifts
+                App.shops.forEach(shop => {
+                    todayEl.innerHTML += `
+                        <div class="shop-card" style="border-left-color: ${shop.color}">
+                            <div class="shop-card-header">
+                                <span class="shop-dot" style="background: ${shop.color}"></span>
+                                <span class="shop-card-name">${shop.name}</span>
+                                <span class="shop-card-count">0 shifts</span>
+                            </div>
+                            <div class="text-muted text-sm" style="padding: 4px 0;">No staff scheduled today</div>
+                        </div>`;
+                });
+            } else {
                 todayEl.innerHTML += `
-                    <div class="shop-card" style="border-left-color: ${shop.color}">
-                        <div class="shop-card-header">
-                            <span class="shop-dot" style="background: ${shop.color}"></span>
-                            <span class="shop-card-name">${shop.name}</span>
-                            <span class="shop-card-count">0 shifts</span>
-                        </div>
-                        <div class="text-muted text-sm" style="padding: 4px 0;">No staff scheduled today</div>
+                    <div class="shop-card text-center" style="padding: 2rem 1rem;">
+                        <span class="material-icons-round" style="font-size:32px; color:var(--text-muted); margin-bottom: 8px;">free_breakfast</span>
+                        <div style="font-size:1.1rem; font-weight:500;">You don't have any shifts today.</div>
+                        <div class="text-muted text-sm" style="margin-top:4px;">Enjoy your day!</div>
                     </div>`;
-            });
+            }
         }
 
         // ─── WEEKLY HOURS (manager only) ───
@@ -100,7 +109,7 @@ async function renderDashboard(container) {
         // ─── TOMORROW'S COVERAGE ───
         const tomorrowLabel = data.tomorrow_date ? formatDate(data.tomorrow_date) : 'Tomorrow';
         el.innerHTML += `<div class="dash-section">
-            <div class="dash-section-title">🗓️ Tomorrow's Coverage <span class="text-muted text-sm">(${tomorrowLabel})</span></div>
+            <div class="dash-section-title">${isManager() ? "🗓️ Tomorrow's Coverage" : "🗓️ My Shift Tomorrow"} <span class="text-muted text-sm">(${tomorrowLabel})</span></div>
             <div id="dash-tomorrow"></div>
         </div>`;
 
@@ -122,17 +131,25 @@ async function renderDashboard(container) {
                     </div>`;
             });
         } else {
-            App.shops.forEach(shop => {
+            if (isManager()) {
+                App.shops.forEach(shop => {
+                    tomorrowEl.innerHTML += `
+                        <div class="shop-card" style="border-left-color: ${shop.color}; opacity:0.7">
+                            <div class="shop-card-header">
+                                <span class="shop-dot" style="background: ${shop.color}"></span>
+                                <span class="shop-card-name">${shop.name}</span>
+                                <span class="shop-card-count">0 shifts</span>
+                            </div>
+                            <div class="text-muted text-sm" style="padding: 4px 0;">No staff scheduled tomorrow</div>
+                        </div>`;
+                });
+            } else {
                 tomorrowEl.innerHTML += `
-                    <div class="shop-card" style="border-left-color: ${shop.color}; opacity:0.7">
-                        <div class="shop-card-header">
-                            <span class="shop-dot" style="background: ${shop.color}"></span>
-                            <span class="shop-card-name">${shop.name}</span>
-                            <span class="shop-card-count">0 shifts</span>
-                        </div>
-                        <div class="text-muted text-sm" style="padding: 4px 0;">No staff scheduled tomorrow</div>
+                    <div class="shop-card text-center" style="padding: 2rem 1rem; opacity: 0.8">
+                        <span class="material-icons-round" style="font-size:32px; color:var(--text-muted); margin-bottom: 8px;">hotel</span>
+                        <div style="font-size:1.1rem; font-weight:500;">No shifts scheduled for tomorrow.</div>
                     </div>`;
-            });
+            }
         }
 
         // ─── PAYROLL EXPORT (manager only) ───

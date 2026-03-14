@@ -110,6 +110,61 @@ document.getElementById('btn-logout').addEventListener('click', async () => {
 });
 
 // ═══════════════════════════════════════════
+// CHANGE PASSWORD
+// ═══════════════════════════════════════════
+function openChangePasswordModal() {
+    const body = `
+        <form id="change-pass-form" onsubmit="submitChangePassword(event)">
+            <div class="input-group">
+                <label>Current Password</label>
+                <input type="password" id="pass-current" required style="padding-left:0.75rem">
+            </div>
+            <div class="input-group" style="margin-top:10px;">
+                <label>New Password</label>
+                <input type="password" id="pass-new" required style="padding-left:0.75rem">
+            </div>
+            <div class="input-group" style="margin-top:10px;">
+                <label>Confirm New Password</label>
+                <input type="password" id="pass-confirm" required style="padding-left:0.75rem">
+            </div>
+            <button type="submit" id="pass-submit-btn" style="display:none"></button>
+        </form>
+    `;
+
+    const footer = `
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="document.getElementById('pass-submit-btn').click()">
+            <span class="material-icons-round">save</span> Save Password
+        </button>
+    `;
+
+    openModal('Change Password', body, footer);
+}
+
+async function submitChangePassword(e) {
+    e.preventDefault();
+    const current = document.getElementById('pass-current').value;
+    const newPass = document.getElementById('pass-new').value;
+    const confirmPass = document.getElementById('pass-confirm').value;
+
+    if (newPass !== confirmPass) {
+        return showToast('New passwords do not match', 'warning');
+    }
+    if (newPass.length < 4) {
+        return showToast('Password must be at least 4 characters', 'warning');
+    }
+
+    try {
+        await api('users.php?action=change_password', 'POST', { old_password: current, new_password: newPass });
+        showToast('Password updated successfully', 'success');
+        closeModal();
+    } catch (err) {
+        showToast(err.error || 'Failed to change password', 'error');
+    }
+}
+
+
+// ═══════════════════════════════════════════
 // ROUTER / NAVIGATION
 // ═══════════════════════════════════════════
 function navigateTo(page) {
