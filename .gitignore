@@ -1,0 +1,17 @@
+# Local utility / setup scripts (not for production)
+seed_users.php
+test_parse.php
+migration_output.txt
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor dirs
+.vscode/
+.idea/
