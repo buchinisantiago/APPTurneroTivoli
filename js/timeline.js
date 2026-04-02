@@ -282,7 +282,7 @@ async function loadTimeline() {
 
         // Update date label
         const label = document.getElementById('timeline-date-label');
-        if (label) label.textContent = formatDate(timelineDate);
+        if (label) label.textContent = formatDate(formatDateISO(timelineDate));
 
     } catch (err) {
         container.innerHTML = `<div class="alert-card alert-danger" style="margin:1rem;">
