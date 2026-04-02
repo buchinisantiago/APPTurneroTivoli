@@ -6,7 +6,7 @@ async function renderDashboard(container) {
     container.innerHTML = `
         <div class="page-header">
             <h2 class="page-title">Dashboard</h2>
-            <span class="tag tag-info">${formatDate(new Date())}</span>
+            <span class="tag tag-info">${formatDate(formatDateISO(new Date()))}</span>
         </div>
         <div id="dash-content"><div class="spinner"></div></div>
     `;

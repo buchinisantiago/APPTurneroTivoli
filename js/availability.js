@@ -29,11 +29,21 @@ async function renderAvailability(container) {
         ${empId ? `
         <!-- Staff: Weekly schedule editor -->
         <div class="dash-section">
-            <div class="dash-section-title">📅 My Weekly Schedule</div>
+            <div class="dash-section-title">My Weekly Schedule</div>
             <p class="text-sm text-muted" style="margin-bottom:0.75rem;">Set the hours you're available to work each day.</p>
             <div id="weekly-schedule-editor"><div class="spinner"></div></div>
         </div>
-        ` : ''}
+        ` : (!mgr ? `
+        <div class="dash-section">
+            <div class="alert-card alert-info">
+                <span class="material-icons-round">person_off</span>
+                <div>
+                    <strong>No employee profile linked</strong>
+                    <div class="text-sm" style="margin-top:4px;">Your user account is not linked to an employee profile yet. Ask your manager to link your account so you can manage your availability.</div>
+                </div>
+            </div>
+        </div>
+        ` : '')}
 
         <!-- Time off requests -->
         <div id="availability-content"><div class="spinner"></div></div>

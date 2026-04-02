@@ -23,7 +23,7 @@ async function renderTimeline(container) {
                     <span class="material-icons-round">chevron_right</span>
                 </button>
             </div>
-            <div class="timeline-date" id="timeline-date-label">${formatDate(timelineDate)}</div>
+            <div class="timeline-date" id="timeline-date-label">${formatDate(formatDateISO(timelineDate))}</div>
             <div class="filters-bar" style="margin:0">
                 <select id="timeline-shop-filter" onchange="loadTimeline(); loadMonthlyCalendar();" style="font-size:0.75rem">
                     <option value="">All Shops</option>
@@ -296,14 +296,14 @@ function shiftTimelineDate(days) {
     timelineDate.setDate(timelineDate.getDate() + days);
     loadTimeline();
     const label = document.getElementById('timeline-date-label');
-    if (label) label.textContent = formatDate(timelineDate);
+    if (label) label.textContent = formatDate(formatDateISO(timelineDate));
 }
 
 function goToTimelineToday() {
     timelineDate = new Date();
     loadTimeline();
     const label = document.getElementById('timeline-date-label');
-    if (label) label.textContent = formatDate(timelineDate);
+    if (label) label.textContent = formatDate(formatDateISO(timelineDate));
 }
 
 function showTimelineShiftDetail(shiftId) {
