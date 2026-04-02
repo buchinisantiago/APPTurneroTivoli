@@ -11,7 +11,7 @@ RUN a2enmod rewrite
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
 # Pass environment variables from system to Apache/PHP
-RUN echo 'PassEnv DATABASE_URL' >> /etc/apache2/conf-enabled/environment.conf
+RUN echo 'PassEnv DATABASE_URL DB_HOST DB_PORT DB_NAME DB_USER DB_PASS' >> /etc/apache2/conf-enabled/environment.conf
 
 # Copy application files
 WORKDIR /var/www/html

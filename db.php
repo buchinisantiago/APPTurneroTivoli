@@ -4,19 +4,34 @@
  * Supports both MySQL (local/XAMPP) and PostgreSQL (Render/Supabase)
  */
 
-// Detect environment — try multiple sources for env vars
-$database_url = getenv('DATABASE_URL')
-    ?: ($_ENV['DATABASE_URL'] ?? '')
-    ?: ($_SERVER['DATABASE_URL'] ?? '');
+// Helper to read env var from all sources
+function env(string $key, string $default = ''): string {
+    return getenv($key) ?: ($_ENV[$key] ?? '') ?: ($_SERVER[$key] ?? '') ?: $default;
+}
 
-if ($database_url) {
-    // PRODUCTION (Render → Supabase PostgreSQL)
+$db_host = env('DB_HOST');
+$database_url = env('DATABASE_URL');
+
+if ($db_host) {
+    // PRODUCTION — Individual env vars (Render: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS)
+    $host   = $db_host;
+    $port   = env('DB_PORT', '6543');
+    $dbname = env('DB_NAME', 'postgres');
+    $user   = env('DB_USER');
+    $pass   = env('DB_PASS');
+
+    define('DB_DSN', "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require");
+    define('DB_USER', $user);
+    define('DB_PASS', $pass);
+    define('DB_DRIVER', 'pgsql');
+} elseif ($database_url) {
+    // PRODUCTION fallback — Single DATABASE_URL string
     $dbopts = parse_url($database_url);
-    $host = $dbopts["host"];
-    $port = $dbopts["port"];
-    $user = isset($dbopts["user"]) ? urldecode($dbopts["user"]) : '';
-    $pass = isset($dbopts["pass"]) ? urldecode($dbopts["pass"]) : '';
-    $dbname = ltrim($dbopts["path"], '/');
+    $host   = $dbopts['host'];
+    $port   = $dbopts['port'] ?? 5432;
+    $user   = isset($dbopts['user']) ? urldecode($dbopts['user']) : '';
+    $pass   = isset($dbopts['pass']) ? urldecode($dbopts['pass']) : '';
+    $dbname = ltrim($dbopts['path'] ?? '/postgres', '/');
 
     define('DB_DSN', "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require");
     define('DB_USER', $user);
